@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:route-api="http://www.mulesoft.org/schema/mule/route-api"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/route-api http://www.mulesoft.org/schema/mule/route-api/current/mule-route-api.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<route-api:config name="RouteAPI_Config" doc:name="RouteAPI Config" doc:id="0a012d5f-e438-4742-af29-172db521aa8e" property_host="${route.host}" property_port="${route.port}" property_protocol="${route.protocol}" property_basePath="/api"/>
+	<sub-flow name="getMovies" doc:id="9dd03aab-2be5-42d2-88c2-abfafba56697" >
+		<ee:transform doc:name="ListMovieReq" doc:id="ecd4909e-93cd-40c3-9268-8399bec6f995" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"movieListReq":{
+	
+	"language": attributes.queryParams.Language,
+	"date": attributes.queryParams.Date,
+	"location": attributes.queryParams.Location
+}	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="GET" doc:name="ListMoviesByLoc" doc:id="1c57c481-2edc-4a4d-9848-813cdfae0544" config-ref="HTTP_Request_configuration" path="/route">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "1d2A47f4aAb04e4db7e0c3712157b443",
+	"Content-Type" : "application/json",
+	"client_id" : "01b0ca4ebd9942f78400035bb2479891"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"requestType" : "listMoviesByLoc"
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Movies available?" doc:id="febbe8b2-7429-4737-9d25-ea99d76238c8" >
+			<when expression="#[typeOf(payload.movieListRsp) == Array]">
+				<ee:transform doc:name="ListMovieRsp" doc:id="eb1f0045-daa8-4647-a0a7-98aa618b5746">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.movieListRsp map(value,index)->
+{
+	MovieID: value.MovieId,
+	MovieName: value.MovieName,
+	MovieLanguage: value.MovieLanguage,
+	MovieDuration: value.MovieDuration,
+	MovieCast: value.MovieCast
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="ListMovieRsp" doc:id="38524a85-8eea-4b39-83e9-1509f4b512ce" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.movieListRsp]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	
+		<logger level="INFO" doc:name="Logger" doc:id="56082811-ccfe-46e9-ac73-efc35e34947d" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="getTheater" doc:id="d0918e2a-148a-4deb-92ce-cea90313568d">
+		<ee:transform doc:name="ListTheatreReq" doc:id="3c18ba83-e900-4402-b06d-407743ab36cf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"movieListReq":{
+	
+	"movieID": attributes.queryParams.MovieID,
+	"date": attributes.queryParams.Date,
+	"location": attributes.queryParams.Location
+}	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="GET" doc:name="listTheatreByMovie" doc:id="beaf28e7-d64f-4354-a1df-de564dbafa8e" config-ref="HTTP_Request_configuration" path="/route">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "1d2A47f4aAb04e4db7e0c3712157b443",
+	"Content-Type" : "application/json",
+	"client_id" : "01b0ca4ebd9942f78400035bb2479891"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"requestType" : "listTheatreByMovie"
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Theater available?" doc:id="3ad99aa3-b40b-4d08-bc57-bc6bc37d9b2d" >
+			<when expression='#[typeOf(payload.movieListRsp) == Array]'>
+				<ee:transform doc:name="ListTheatreRsp" doc:id="0a142541-f79a-4fe6-a6a8-106f0a8606d9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.movieListRsp map(value,index)->
+{
+	TheatreID: value.TheatreID,
+	TheatreName: value.TheatreName,
+	TheatreLocation: value.TheatreLocation,
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="ListTheatreRsp" doc:id="b6749c1e-3282-4a25-b4fc-8263b99786c2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.movieListRsp]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="b5a1f432-d3b9-4b19-b91e-1dda5838a882" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="getTheaterByID" doc:id="336de6f3-0608-4256-bfb2-326b3517e4df" >
+		<ee:transform doc:name="ListTheatreByIdReq" doc:id="d9888fdb-7365-4b29-babc-aebc8cb5f298" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"movieListReq":{
+	
+	"movieID": attributes.queryParams.MovieID,
+	"date": attributes.queryParams.Date,
+	"theatreID": attributes.uriParams.theaterID
+}	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="GET" doc:name="ListSeats" doc:id="cf965e0f-7cdc-42be-a31f-c4b687497644" config-ref="HTTP_Request_configuration" path="/route">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "1d2A47f4aAb04e4db7e0c3712157b443",
+	"Content-Type" : "application/json",
+	"client_id" : "01b0ca4ebd9942f78400035bb2479891"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"requestType" : "getSeatcount"
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Seats available?" doc:id="a8dfe93b-97b0-4393-bb84-402aee54e0b6" >
+			<when expression='#[typeOf(payload.movieListRsp) == Array]'>
+				<ee:transform doc:name="ListTheatreByIdRsp" doc:id="8e33aea8-d1ed-4965-9e49-7be04d76586d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.movieListRsp map(value,index)->
+{
+	ScreenID: value.ScreenID,
+	SeatType: value.SeatType,
+	SeatCount: value.SeatCount,
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="ListTheatreByIdRsps" doc:id="cbd85b55-feaf-4077-8bc1-e42b5316b170" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.movieListRsp]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="aa0c2269-a486-4144-8aee-794f6da8de29" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="bookTicket" doc:id="31a72064-4955-4703-9b7b-77a5a3dea830" >
+		<ee:transform doc:name="BookTicketReq" doc:id="f7c71fa6-3ccc-4cf4-894f-504c9edc9e49" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"bookticketReq":{
+	
+	"movieName": message.payload.MovieName,
+	"theatreName": message.payload.TheaterName,
+	"theatreLocation": attributes.queryParams.Location,
+	"showtime": message.payload.ShowTime,
+	"seats": {
+         "seat": payload.Seats.Seat map(value,object)->
+         {
+     "seattype": value.Type,
+         "seatcount": value.NoofSeats
+         }
+     } 
+	
+}	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6f26a1c6-f8bc-4996-baab-c8a43f98341d" message="#[payload]"/>
+		<route-api:book-a-movie-ticket doc:name="Book a movie ticket" doc:id="0466ad1f-08b8-4dce-98e4-cd9a76a4a524" config-ref="RouteAPI_Config" content-type="application/json" client-id="${credentials.client_id}" client-secret="${credentials.client_secret}"/>
+		<ee:transform doc:name="Transform Message" doc:id="15cb6f8b-4f5e-4265-a0a8-ab42aa35ddb1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.bookticketRsp]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

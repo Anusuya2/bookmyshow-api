@@ -1,0 +1,8 @@
+route:
+  host: "route-process-api.us-e2.cloudhub.io"
+  port: "80"
+  protocol: "HTTP"
+
+credentials:
+  client_id: "01b0ca4ebd9942f78400035bb2479891"
+  client_secret: "1d2A47f4aAb04e4db7e0c3712157b443"

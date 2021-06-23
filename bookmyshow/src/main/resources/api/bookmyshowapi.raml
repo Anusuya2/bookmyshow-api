@@ -1,0 +1,121 @@
+#%RAML 1.0
+title: bookmyshow experience API
+
+uses:
+  datatypeLib: /exchange_modules/aff3dafa-8738-4429-b9bf-5a690ee044d3/bms-library/1.0.0/bms-library.raml
+  bookticketlib: /exchange_modules/aff3dafa-8738-4429-b9bf-5a690ee044d3/bms-bookseats-lib/1.0.4/bms-bookseats-lib.raml
+
+securitySchemes:
+  oauth_2_0:
+    description: This API supports OAuth 2.0 for authenticating all API requests.
+    type: OAuth 2.0
+    describedBy:
+      queryParameters:
+        access_token:
+          description: Use to send a valid OAuth 2 Access token.
+          type: string
+      responses:
+        401: 
+          description: Bad or Expired token
+        403:
+          description: Bad OAuth request
+    settings:
+      authorizationUri: http://0.0.0.0:8081/authorize
+      accessTokenUri: http://0.0.0.0:8081/access-token
+      authorizationGrants: [client_credentials]
+
+types:
+  Location:
+    enum:
+      - CHENNAI
+      - HYDERABAD
+      - MUMBAI
+      - BANGALORE
+      - KERALA
+  Date:
+    enum:
+      - TODAY
+      - TOMORROW
+
+/movies:
+  get:
+    securedBy: [oauth_2_0]
+    
+    displayName: Get Movies List
+    queryParameters:
+      Location:
+        type: Location
+        required: true
+      Date:
+        type: Date
+        required: true
+      Language:
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: datatypeLib.Movie[]
+            examples:
+              output: !include /examples/MoviesExample.raml
+/theater:
+  get:
+    displayName: Get Theater List
+    queryParameters:
+      Location:
+        type: Location
+        required: true
+      MovieID:
+        type: integer
+        required: true
+      Date:
+        type: Date
+        required: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: datatypeLib.Theater[]
+            examples:
+               output: !include /examples/TheaterExample.raml
+  /{theaterID}:
+    get:
+      displayName: Get available Seats
+      queryParameters:
+        MovieID:
+          type: string
+          required: true
+        Date:
+          type: Date
+          required: true
+      responses:
+        200:
+          body:
+            application/json:
+              type: datatypeLib.Order
+              examples:
+                output: !include /examples/OrderExample.raml
+/bookticket:
+  post:
+    displayName: Book Seats 
+    queryParameters:
+      Location:
+        type: Location
+        required: true
+    body:
+      application/json:
+        type: bookticketlib.BookMovie
+    responses:
+      200:
+        body:
+          application/json:
+            type: bookticketlib.E-ticket
+            examples:
+              output: !include /examples/ETicketExample.raml
+              
+
+
+
+
+  

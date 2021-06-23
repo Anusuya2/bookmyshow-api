@@ -1,0 +1,16 @@
+[
+{
+"MovieID": 1,
+"MovieName" : "Bala",
+"MovieLanguage": "English",
+"MovieDuration": "2.5 hrs",
+"MovieCast" : "Rajkumar, Varun"
+},
+{
+"MovieID": 2,
+"MovieName" : "Joker",
+"MovieLanguage": "English",
+"MovieDuration": "2 hrs",
+"MovieCast" : "aaaa, bbbb"
+},
+]

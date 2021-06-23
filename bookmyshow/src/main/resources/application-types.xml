@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="moviesList" format="json">
+      <types:shape format="weave" example="examples/Movies-2.json"><![CDATA[%dw 2.0
+
+type moviesList = {|
+  MovieID: Number {"typeId": "int"}, 
+  MovieName: String, 
+  MovieLanguage: String, 
+  MovieDuration: String, 
+  MovieCast: String
+|} {"example": "{\\\"MovieID\\\":1,\\\"MovieName\\\":\\\"Bala\\\",\\\"MovieLanguage\\\":\\\"English\\\",\\\"MovieDuration\\\":\\\"2.5 hrs\\\",\\\"MovieCast\\\":\\\"Rajkumar, Varun\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#eb1f0045-daa8-4647-a0a7-98aa618b5746">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="moviesList[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
